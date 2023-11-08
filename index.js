@@ -16,19 +16,30 @@ app.get('/', (req, res) => {
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
-    auth: {
-        user: 'xxxxx',
-        pass: 'xxxxx'
+    auth:  {
+        user: 'xxxx',
+        pass: 'xxxx'
     }
 });
+const mailQueue = [];
+setInterval(() => {// send queue
+    if (mailQueue.length === 0) return;
+    const item = mailQueue.pop();
+    console.log(`start send: ${item.subject} to ${item.to}`);
+    transporter.sendMail(item);
+}, 500);
 
 
 const parseTemplate = (template, data) => {
     let html = template.versions[0].html_content;
     const dataVariable = data.dynamic_template_data;
-    const subject = dataVariable?.subject || "";
-    const to = data.to.email;
-    const bcc = data?.bcc?.email;
+    // const subject = Handlebars.compile(template.versions[0].subject)(dataVariable);
+    // const to = data.to.email;
+    const subject = Handlebars.compile(template.versions[0].subject)(dataVariable);
+    const to = data.to.map(t => t.email).join(',');
+    const bcc = '';//data?.bcc?.email;
+
+    // const bcc = data?.bcc?.email;
     const templateBuilder = Handlebars.compile(html)
     // parse
     // for (let keyObject in dataVariable) {
@@ -50,16 +61,22 @@ app.post('/send', async (req, res) => {
         url: `/v3/templates/${req.body.templateId}`,
         method: 'GET',
       })
-    const from = req.body.from;
+    const from = `${req.body.from.name} <${req.body.from.email}>`;
     const [html, subject, to, bcc] = parseTemplate(template, req.body.personalizations[0])
-    console.log(`start send: ${subject} to ${to} and bcc (${bcc})`);
+    console.log(`push to queue: ${subject} to ${to} and bcc (${bcc})`);
     // send email
-    transporter.sendMail({
+    mailQueue.push({
         from,
         to,
         subject,
         html
     });
+    // transporter.sendMail({
+    //     from,
+    //     to,
+    //     subject,
+    //     html
+    // });
 
     res.send('Done')
 })
@@ -74,12 +91,19 @@ app.post('/send-raw', async (req, res) => {
     const {subject, to, text, from} = req.body;
     console.log(`start send raw: ${subject} to ${to}`);
     // send email
-    transporter.sendMail({
+    
+    mailQueue.push({
         from: from.email,
         to,
         subject,
         text
     });
+    // transporter.sendMail({
+    //     from: from.email,
+    //     to,
+    //     subject,
+    //     text
+    // });
 
     res.send('Done')
 })
