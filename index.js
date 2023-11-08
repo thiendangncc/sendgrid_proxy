@@ -4,7 +4,7 @@ const port = 4000
 const sendgridKey = "";
 const client = require('@sendgrid/client');
 client.setApiKey(sendgridKey);
-app.use(express.json())    // <==== parse request body as JSON
+app.use(express.json({limit: '500mb'}))    // <==== parse request body as JSON
 const Handlebars = require("handlebars");
 const nodemailer = require('nodemailer');
 
