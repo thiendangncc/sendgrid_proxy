@@ -1,6 +1,6 @@
 const express = require('express')
 const app = express()
-const port = 3000
+const port = 4000
 const sendgridKey = "";
 const client = require('@sendgrid/client');
 client.setApiKey(sendgridKey);
@@ -59,6 +59,26 @@ app.post('/send', async (req, res) => {
         to,
         subject,
         html
+    });
+
+    res.send('Done')
+})
+  
+app.post('/send-raw', async (req, res) => {
+    //get send grid key
+    console.log(`---- input ${JSON.stringify(req.body)}`);
+    const key = req.body?.key;
+    if (key) {
+        client.setApiKey(key);
+    }
+    const {subject, to, text, from} = req.body;
+    console.log(`start send raw: ${subject} to ${to}`);
+    // send email
+    transporter.sendMail({
+        from: from.email,
+        to,
+        subject,
+        text
     });
 
     res.send('Done')
