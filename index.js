@@ -61,7 +61,10 @@ app.post('/send', async (req, res) => {
         url: `/v3/templates/${req.body.templateId}`,
         method: 'GET',
       })
-    const attachments = req.body?.attachments || [];
+    const attachments = (req.body?.attachments || []).map(a => {
+        a.encoding = 'base64';
+        return a;
+    });
     const from = `${req.body.from.name} <${req.body.from.email}>`;
     const [html, subject, to, bcc] = parseTemplate(template, req.body.personalizations[0])
     console.log(`push to queue: ${subject} to ${to} and bcc (${bcc})`);
