@@ -37,7 +37,7 @@ const parseTemplate = (template, data) => {
     // const to = data.to.email;
     const subject = Handlebars.compile(template.versions[0].subject)(dataVariable);
     const to = data.to.map(t => t.email).join(',');
-    const bcc = '';//data?.bcc?.email;
+    const bcc = data?.bcc ? data?.bcc?.map(t => t.email).join(',') : '';
 
     // const bcc = data?.bcc?.email;
     const templateBuilder = Handlebars.compile(html)
@@ -61,6 +61,7 @@ app.post('/send', async (req, res) => {
         url: `/v3/templates/${req.body.templateId}`,
         method: 'GET',
       })
+    const attachments = req.body?.attachments || [];
     const from = `${req.body.from.name} <${req.body.from.email}>`;
     const [html, subject, to, bcc] = parseTemplate(template, req.body.personalizations[0])
     console.log(`push to queue: ${subject} to ${to} and bcc (${bcc})`);
@@ -68,6 +69,8 @@ app.post('/send', async (req, res) => {
     mailQueue.push({
         from,
         to,
+        bcc,
+        attachments,
         subject,
         html
     });
