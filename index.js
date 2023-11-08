@@ -78,7 +78,7 @@ app.post('/send', async (req, res) => {
     //     html
     // });
 
-    res.send('Done')
+    res.send({status: 'Done'})
 })
   
 app.post('/send-raw', async (req, res) => {
@@ -105,7 +105,7 @@ app.post('/send-raw', async (req, res) => {
     //     text
     // });
 
-    res.send('Done')
+    res.send({status: 'Done'})
 })
   
 app.listen(port, () => {
