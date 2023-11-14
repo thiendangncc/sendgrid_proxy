@@ -41,7 +41,7 @@ const parseTemplate = (template, data) => {
     const dataVariable = data.dynamic_template_data;
     // const subject = Handlebars.compile(template.versions[0].subject)(dataVariable);
     // const to = data.to.email;
-    const subject = Handlebars.compile(template.versions[0].subject)(dataVariable);
+    const subject = Handlebars.compile(template.versions[0].subject)(dataVariable).trim();
     const to = data.to.map(t => t.email).join(',');
     const bcc = data?.bcc ? data?.bcc?.map(t => t.email).join(',') : '';
 
