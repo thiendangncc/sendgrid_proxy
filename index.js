@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
 const port = 4000
@@ -7,6 +8,7 @@ client.setApiKey(sendgridKey);
 app.use(express.json({limit: '500mb'}))    // <==== parse request body as JSON
 const Handlebars = require("handlebars");
 const nodemailer = require('nodemailer');
+const { Mails } = require('./initDb');
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
@@ -17,8 +19,8 @@ const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
     auth:  {
-        user: 'xxxx',
-        pass: 'xxxx'
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
     }
 });
 const mailQueue = [];
@@ -27,6 +29,10 @@ setInterval(() => {// send queue
     const item = mailQueue.pop();
     console.log(`start send: ${item.subject} to ${item.to}`);
     transporter.sendMail(item);
+    Mails.create({
+        ...item,
+        sentAt: new Date()
+    })
 }, 500);
 
 
@@ -49,6 +55,33 @@ const parseTemplate = (template, data) => {
     // final template
     return [html, subject, to, bcc]
 }
+ 
+app.get('/mails', async (req, res) => {
+    //get send grid key
+    const from = req.query?.from;
+    const to = req.query?.to;
+    const subject = req.query?.subject;
+    const conditions = {}
+    if (from) {
+        conditions['from'] = from
+    }
+    if (to) {
+        conditions['to'] = to
+    }
+    if (subject) {
+        conditions['subject'] = subject
+    }
+
+    const mails = await Mails.findAll({
+        where: conditions,
+        order: [
+            ['sentAt', 'DESC']
+        ]
+    });
+
+    res.send(mails)
+})
+  
 app.post('/send', async (req, res) => {
     //get send grid key
     console.log(`---- input ${JSON.stringify(req.body)}`);
